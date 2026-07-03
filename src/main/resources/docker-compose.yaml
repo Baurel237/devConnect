@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: entreprise_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root_secure_password
+      MARIADB_DATABASE: entreprise_db
+      MARIADB_USER: borel
+      MARIADB_PASSWORD: borel
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Interface graphique de gestion
+  adminer:
+    image: adminer:latest
+    container_name: entreprise_adminer
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    networks:
+      - backend_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+
+networks:
+  backend_network:
+    driver: bridge
